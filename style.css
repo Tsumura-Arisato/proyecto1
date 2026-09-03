@@ -1,0 +1,90 @@
+/* =========================================================
+   style.css - Hoja de estilos principal del proyecto
+   Aplica a: index.html, tags.html y profile.html
+   ========================================================= */
+
+/* ---------- Estilos generales ---------- */
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background-color: #f4f6f8;
+    color: #222;
+}
+
+header {
+    text-align: center;
+    padding: 20px 10px;
+}
+
+header h1 {
+    color: #2c3e50;
+}
+
+/* ---------- Párrafos ---------- */
+
+/* Todos los párrafos, por defecto, usan este color particular */
+p {
+    color: #34495e;
+    line-height: 1.5;
+}
+
+/* Algunos párrafos comparten esta clase y tienen otro color */
+.highlight {
+    color: #c0392b;
+    font-weight: 500;
+}
+
+/* Un único párrafo identificado por id, con un color propio */
+#intro-text {
+    color: #16a085;
+    font-style: italic;
+}
+
+/* ---------- Imágenes circulares ---------- */
+img {
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    margin: 15px auto;
+    border: 3px solid #dcdcdc;
+}
+
+/* La tabla de tags.html no debe verse afectada por el estilo general de imagen */
+table img {
+    border-radius: 50%;
+}
+
+/* ---------- Navbar (ajustes sobre Bootstrap) ---------- */
+.navbar-brand {
+    font-weight: bold;
+}
+
+.navbar {
+    margin-bottom: 25px;
+}
+
+/* ---------- Tarjeta de login ---------- */
+.login-card {
+    max-width: 420px;
+    margin: 30px auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ---------- Contenedores generales de contenido ---------- */
+.content-section {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px 25px;
+    margin: 20px auto;
+    max-width: 800px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+footer {
+    text-align: center;
+    padding: 15px;
+    color: #888;
+    font-size: 0.9em;
+}
