@@ -31,6 +31,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="profile.html">Xtreme</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="formulario.html">Formulario</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -99,6 +102,30 @@
     </div>
 
     <div class="content-section">
+        <h2>Demostración de JavaScript</h2>
+        <p>Prueba los siguientes botones, cada uno usa una parte distinta de JavaScript.</p>
+
+        <div class="mb-3">
+            <button id="btn-contador" type="button" class="btn btn-outline-primary me-2">Sumar contador</button>
+            <span id="contador-salida">Contador: 0</span>
+        </div>
+
+        <div class="mb-3">
+            <button id="btn-fecha" type="button" class="btn btn-outline-primary me-2">Mostrar fecha y hora</button>
+            <span id="fecha-salida"></span>
+        </div>
+
+        <div class="mb-3">
+            <button id="btn-rider" type="button" class="btn btn-outline-primary me-2">Elegir Rider aleatorio</button>
+            <span id="rider-salida"></span>
+        </div>
+
+        <div class="mb-3">
+            <button id="btn-color" type="button" class="btn btn-outline-primary">Cambiar color de fondo</button>
+        </div>
+    </div>
+
+    <div class="content-section">
         <h2>Enlace externo</h2>
         <p class="highlight">
             Puedes visitar <a href="https://www.google.com" target="_blank">Google</a> como ejemplo de enlace externo.
@@ -118,5 +145,6 @@
 
     <!-- Bootstrap JS Bundle (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
