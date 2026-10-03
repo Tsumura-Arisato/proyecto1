@@ -6,26 +6,16 @@
 /* ---------------------------------------------------------
    1) LOGIN (index.html)
    Credenciales de ejemplo (tema Kamen Rider OOO):
-     Usuario: eiji
-     Contraseña: ooo
+     Las credenciales se validan contra la REST-API (POST /login).
+     Primero hay que registrarse en formulario.html.
    --------------------------------------------------------- */
 
-// "Base de datos" simple de usuarios válidos
-const usuariosValidos = [
-    { usuario: "eiji", contrasena: "ooo" },
-    { usuario: "ankh", contrasena: "greeed" }
-];
-
-function validarLogin(evento) {
+async function validarLogin(evento) {
     // Evita que el formulario recargue la página
     evento.preventDefault();
 
-    const usuarioInput = document.getElementById("username");
-    const contrasenaInput = document.getElementById("password");
-    const mensaje = document.getElementById("login-message");
-
-    const usuario = usuarioInput.value.trim().toLowerCase();
-    const contrasena = contrasenaInput.value.trim().toLowerCase();
+    const usuario = document.getElementById("username").value.trim();
+    const contrasena = document.getElementById("password").value;
 
     // Validación básica de campos vacíos
     if (usuario === "" || contrasena === "") {
@@ -33,19 +23,16 @@ function validarLogin(evento) {
         return;
     }
 
-    // Buscamos si existe un usuario que coincida (uso de array + método .some/.find)
-    const usuarioEncontrado = usuariosValidos.find(function (u) {
-        return u.usuario === usuario && u.contrasena === contrasena;
-    });
-
-    if (usuarioEncontrado) {
-        mostrarMensajeLogin("¡Bienvenido, " + usuario + "! Redirigiendo...", true);
-        // Pequeño retraso antes de redirigir para que se alcance a leer el mensaje
+    try {
+        // POST /login en la REST-API
+        const respuesta = await api.login(usuario, contrasena);
+        sesion.guardar(respuesta.user);
+        mostrarMensajeLogin("¡Bienvenido, " + respuesta.user.username + "! Redirigiendo...", true);
         setTimeout(function () {
             window.location.href = "profile.html";
         }, 1200);
-    } else {
-        mostrarMensajeLogin("Usuario o contraseña incorrectos.", false);
+    } catch (error) {
+        mostrarMensajeLogin(error.message, false);
     }
 }
 
@@ -215,12 +202,171 @@ function verificarCheckboxes() {
     boton.disabled = !(check1.checked && check2.checked);
 }
 
-function enviarFormulario(evento) {
+async function enviarFormulario(evento) {
     evento.preventDefault();
     const resultado = document.getElementById("formulario-resultado");
-    if (resultado) {
-        resultado.textContent = "¡Formulario enviado correctamente!";
-        resultado.style.display = "block";
+
+    const tipo = document.querySelector('input[name="tipo-cuenta"]:checked');
+    const selectPais = document.getElementById("select-pais");
+    const selectRegion = document.getElementById("select-region");
+
+    const datos = {
+        username: document.getElementById("reg-username").value.trim(),
+        email: document.getElementById("reg-email").value.trim(),
+        password: document.getElementById("reg-password").value,
+        tipo_cuenta: tipo ? tipo.value : "free",
+        pais: selectPais.value ? selectPais.options[selectPais.selectedIndex].textContent : null,
+        region: selectRegion.value ? selectRegion.options[selectRegion.selectedIndex].textContent : null
+    };
+
+    resultado.style.display = "block";
+    if (!datos.username || !datos.email || !datos.password) {
+        resultado.textContent = "Usuario, correo y contraseña son obligatorios.";
+        return;
+    }
+
+    try {
+        // POST /users en la REST-API
+        await api.crearUsuario(datos);
+        resultado.textContent = "¡Registro exitoso! Redirigiendo al login...";
+        setTimeout(function () { window.location.href = "index.html"; }, 1500);
+    } catch (error) {
+        resultado.textContent = error.message;
+    }
+}
+
+/* ---------------------------------------------------------
+   4.4) PERFIL (profile.html): datos del usuario desde la API
+   --------------------------------------------------------- */
+async function cargarPerfil() {
+    const contenedor = document.getElementById("perfil-datos");
+    if (!contenedor) return;
+
+    const actual = sesion.obtener();
+    if (!actual) {
+        contenedor.innerHTML = '<p class="highlight">No has iniciado sesión. <a href="index.html">Ir al login</a></p>';
+        return;
+    }
+    try {
+        // GET /users/:id
+        const u = await api.obtenerUsuario(actual.id);
+        document.getElementById("perfil-nombre").textContent = u.username;
+        document.getElementById("perfil-correo").textContent = u.email;
+        document.getElementById("perfil-cuenta").textContent = u.tipo_cuenta || "free";
+        document.getElementById("perfil-ubicacion").textContent =
+            [u.region, u.pais].filter(Boolean).join(", ") || "No especificada";
+        document.getElementById("perfil-fecha").textContent =
+            new Date(u.created_at).toLocaleDateString("es-ES");
+    } catch (error) {
+        sesion.cerrar();
+        contenedor.innerHTML = '<p class="highlight">' + error.message + ' <a href="index.html">Ir al login</a></p>';
+    }
+}
+
+function cerrarSesion() {
+    sesion.cerrar();
+    window.location.href = "index.html";
+}
+
+/* ---------------------------------------------------------
+   4.5) PRODUCTOS (productos.html): CRUD contra la API
+   --------------------------------------------------------- */
+function mostrarMensajeProducto(texto, esExito) {
+    const m = document.getElementById("producto-mensaje");
+    if (!m) return;
+    m.textContent = texto;
+    m.style.display = "block";
+    m.style.color = esExito ? "#16a085" : "#c0392b";
+}
+
+function escapar(texto) {
+    const d = document.createElement("div");
+    d.textContent = texto == null ? "" : texto;
+    return d.innerHTML;
+}
+
+async function cargarProductos() {
+    const cuerpo = document.getElementById("tabla-productos");
+    if (!cuerpo) return;
+    try {
+        const productos = await api.listarProductos();
+        cuerpo.innerHTML = "";
+        if (productos.length === 0) {
+            cuerpo.innerHTML = '<tr><td colspan="5" class="text-center">No hay productos.</td></tr>';
+            return;
+        }
+        productos.forEach(function (p) {
+            const fila = document.createElement("tr");
+            fila.innerHTML =
+                "<td>" + escapar(p.name) + "</td>" +
+                "<td>" + escapar(p.description) + "</td>" +
+                "<td>" + p.quantity + "</td>" +
+                "<td>$" + Number(p.price).toFixed(2) + "</td>" +
+                '<td><button class="btn btn-sm btn-outline-primary me-1 btn-editar">Editar</button>' +
+                '<button class="btn btn-sm btn-outline-danger btn-borrar">Eliminar</button></td>';
+            fila.querySelector(".btn-editar").addEventListener("click", function () { editarProducto(p); });
+            fila.querySelector(".btn-borrar").addEventListener("click", function () { borrarProducto(p.id); });
+            cuerpo.appendChild(fila);
+        });
+    } catch (error) {
+        mostrarMensajeProducto(error.message, false);
+    }
+}
+
+function editarProducto(p) {
+    document.getElementById("producto-id").value = p.id;
+    document.getElementById("producto-nombre").value = p.name;
+    document.getElementById("producto-descripcion").value = p.description || "";
+    document.getElementById("producto-cantidad").value = p.quantity;
+    document.getElementById("producto-precio").value = p.price;
+    document.getElementById("btn-guardar-producto").textContent = "Actualizar producto";
+    document.getElementById("btn-cancelar-edicion").style.display = "inline-block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function limpiarFormularioProducto() {
+    document.getElementById("form-producto").reset();
+    document.getElementById("producto-id").value = "";
+    document.getElementById("btn-guardar-producto").textContent = "Agregar producto";
+    document.getElementById("btn-cancelar-edicion").style.display = "none";
+}
+
+async function guardarProducto(evento) {
+    evento.preventDefault();
+    const id = document.getElementById("producto-id").value;
+    const producto = {
+        name: document.getElementById("producto-nombre").value.trim(),
+        description: document.getElementById("producto-descripcion").value.trim(),
+        quantity: parseInt(document.getElementById("producto-cantidad").value, 10) || 0,
+        price: parseFloat(document.getElementById("producto-precio").value)
+    };
+    if (!producto.name || isNaN(producto.price)) {
+        mostrarMensajeProducto("Nombre y precio son obligatorios.", false);
+        return;
+    }
+    try {
+        if (id) {
+            await api.actualizarProducto(id, producto);   // PUT /products/:id
+            mostrarMensajeProducto("Producto actualizado.", true);
+        } else {
+            await api.crearProducto(producto);            // POST /products
+            mostrarMensajeProducto("Producto agregado.", true);
+        }
+        limpiarFormularioProducto();
+        cargarProductos();
+    } catch (error) {
+        mostrarMensajeProducto(error.message, false);
+    }
+}
+
+async function borrarProducto(id) {
+    if (!confirm("¿Eliminar este producto?")) return;
+    try {
+        await api.eliminarProducto(id);                   // DELETE /products/:id
+        mostrarMensajeProducto("Producto eliminado.", true);
+        cargarProductos();
+    } catch (error) {
+        mostrarMensajeProducto(error.message, false);
     }
 }
 
@@ -252,6 +398,19 @@ document.addEventListener("DOMContentLoaded", function () {
     // profile.html - mostrar/ocultar
     const btnToggleSobreMi = document.getElementById("btn-toggle-sobre-mi");
     if (btnToggleSobreMi) btnToggleSobreMi.addEventListener("click", toggleSobreMi);
+
+    // profile.html - datos desde la API
+    cargarPerfil();
+    const btnLogout = document.getElementById("btn-logout");
+    if (btnLogout) btnLogout.addEventListener("click", cerrarSesion);
+
+    // productos.html - CRUD
+    const formProducto = document.getElementById("form-producto");
+    if (formProducto) {
+        formProducto.addEventListener("submit", guardarProducto);
+        document.getElementById("btn-cancelar-edicion").addEventListener("click", limpiarFormularioProducto);
+        cargarProductos();
+    }
 
     // formulario.html
     const radiosTipoCuenta = document.getElementsByName("tipo-cuenta");

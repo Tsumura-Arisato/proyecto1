@@ -34,6 +34,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="formulario.html">Formulario</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="productos.html">Productos</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -50,18 +53,14 @@
 
     <div class="content-section">
         <h2>COUNT THE MEDALS. 1, 2 and 3.</h2>
-        <p>
-            <strong>Nombre:</strong> Hino Eiji
-        </p>
-        <p>
-            <strong>Edad:</strong> 21 años
-        </p>
-        <p>
-            <strong>Ciudad:</strong> Cous Courrier, Japan
-        </p>
-        <p>
-            <strong>Correo:</strong> AnkhOOO@KamenRider.com
-        </p>
+        <div id="perfil-datos">
+            <p><strong>Usuario:</strong> <span id="perfil-nombre">Cargando...</span></p>
+            <p><strong>Correo:</strong> <span id="perfil-correo"></span></p>
+            <p><strong>Tipo de cuenta:</strong> <span id="perfil-cuenta"></span></p>
+            <p><strong>Ubicación:</strong> <span id="perfil-ubicacion"></span></p>
+            <p><strong>Miembro desde:</strong> <span id="perfil-fecha"></span></p>
+            <button id="btn-logout" type="button" class="btn btn-outline-danger btn-sm">Cerrar sesión</button>
+        </div>
         <p class="highlight">
             Soy estudiante y estoy aprendiendo <strong>HTML</strong> como parte de mis
             prácticas de desarrollo web. Esta es la versión
@@ -94,6 +93,7 @@
 
     <!-- Bootstrap JS Bundle (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
